@@ -20,22 +20,13 @@
                     colors: {
                         cyan: { 400:'#22d3ee', 500:'#06b6d4', 600:'#0891b2' }
                     },
-                    fontFamily: { sans: ['Inter','system-ui','sans-serif'] },
-                    animation: {
-                        'float': 'float 6s ease-in-out infinite',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4,0,0.6,1) infinite',
-                        'spin-slow': 'spin 20s linear infinite',
-                    },
-                    keyframes: {
-                        float: {
-                            '0%,100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-20px)' },
-                        }
-                    }
+                    fontFamily: { sans: ['Inter','system-ui','sans-serif'] }
                 }
             }
         }
     </script>
+    {{-- Collapse plugin must load before Alpine core --}}
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -44,18 +35,9 @@
         * { scrollbar-width: thin; scrollbar-color: #06b6d4 transparent; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #06b6d4; border-radius: 2px; }
+        html { scroll-behavior: smooth; }
         body { font-family: 'Inter', system-ui, sans-serif; }
-
-        .hero-bg {
-            background: radial-gradient(ellipse at 50% 100%, rgba(6,182,212,0.12) 0%, transparent 60%),
-                        radial-gradient(ellipse at 20% 50%, rgba(6,182,212,0.06) 0%, transparent 50%),
-                        radial-gradient(ellipse at 80% 20%, rgba(8,145,178,0.04) 0%, transparent 50%),
-                        #030712;
-        }
-
-        .orb-glow {
-            filter: drop-shadow(0 0 60px rgba(6,182,212,0.25)) drop-shadow(0 0 120px rgba(6,182,212,0.12));
-        }
+        section[id] { scroll-margin-top: 72px; }
 
         .glassmorphism {
             background: rgba(255,255,255,0.04);
@@ -87,7 +69,10 @@
             }
         }
 
+        /* ── CTA buttons: sheen sweep on hover ── */
         .cta-btn {
+            position: relative;
+            overflow: hidden;
             background: white;
             color: #030712;
             transition: all 0.2s ease;
@@ -98,41 +83,17 @@
             box-shadow: 0 0 50px rgba(6,182,212,0.35);
             transform: translateY(-1px);
         }
-
-        .feature-card:hover {
-            border-color: rgba(6,182,212,0.3);
-            transform: translateY(-2px);
-            transition: all 0.2s ease;
-        }
-
-        .text-gradient {
-            background: linear-gradient(135deg, #fff 0%, #06b6d4 60%, #0891b2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* Crypto GIF — mix-blend-mode:screen makes black bg transparent */
-        .crypto-gif {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            mix-blend-mode: screen;
-            filter: brightness(1.1) saturate(1.2);
-        }
-
-        .hero-right-glow {
+        .cta-btn::after, .nt-btn-primary::after {
+            content: '';
             position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at 60% 50%, rgba(6,182,212,0.08) 0%, transparent 70%);
+            top: 0; left: -75%;
+            width: 45%; height: 100%;
+            background: linear-gradient(105deg, transparent, rgba(6,182,212,0.28), transparent);
+            transform: skewX(-20deg);
+            transition: left 0.55s ease;
             pointer-events: none;
         }
-
-        /* ticker */
-        @keyframes ticker-scroll {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
+        .cta-btn:hover::after, .nt-btn-primary:hover::after { left: 130%; }
 
         .nav-link {
             color: rgba(255,255,255,0.65);
@@ -142,6 +103,15 @@
         .nav-link:hover { color: white; }
 
         [x-cloak] { display: none !important; }
+
+        /* ── Scroll reveal ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(26px);
+            transition: opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1);
+            transition-delay: var(--rd, 0ms);
+        }
+        .reveal.is-visible { opacity: 1; transform: none; }
 
         /* ── Full-screen Apple-style mobile menu ── */
         @keyframes mob-item-in {
@@ -189,9 +159,35 @@
             transition: background 0.15s, box-shadow 0.15s;
         }
         .mob-full-cta:hover { background: #dcfeff; box-shadow: 0 0 40px rgba(6,182,212,0.25); }
+
+        /* ── Markets ticker ── */
+        @keyframes ticker-scroll {
+            0%   { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .ticker-mask {
+            -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+            mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+        }
+        .ticker-track { display: flex; width: max-content; animation: ticker-scroll 32s linear infinite; }
+        .ticker-track:hover { animation-play-state: paused; }
+        .ticker-item { display: inline-flex; align-items: center; gap: 8px; margin-right: 3rem; flex-shrink: 0; }
+
+        /* ── Motion respect ── */
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            .reveal { opacity: 1; transform: none; }
+        }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 overflow-x-hidden" x-data="{ mobileMenu: false }">
+<body class="bg-gray-950 text-gray-100 overflow-x-hidden"
+      x-data="{ mobileMenu: false }"
+      x-effect="document.documentElement.style.overflow = mobileMenu ? 'hidden' : ''">
 
     {{-- ══════════════════ NAVBAR ══════════════════ --}}
     <nav class="nav-glassmorphism fixed top-0 inset-x-0 z-50">
@@ -238,7 +234,6 @@
                 </button>
             </div>
         </div>
-
     </nav>
 
     {{-- ── Full-screen mobile menu overlay (Apple style) ── --}}
@@ -273,7 +268,7 @@
 
     {{-- ══════════════════ HERO ══════════════════ --}}
     <style>
-        /* ══ Hero: text left · orb right (row on all sizes) ══ */
+        /* ══ Hero: text left · orb right ══ */
         .nt-hero {
             background: radial-gradient(ellipse at 70% 60%, rgba(14,18,40,0.65) 0%, #06080f 55%);
             position: relative;
@@ -285,7 +280,7 @@
             overflow: hidden;
         }
 
-        /* Scattered star field */
+        /* Scattered star field — gently breathing */
         .nt-hero::before {
             content: '';
             position: absolute;
@@ -307,6 +302,29 @@
                 radial-gradient(1px   1px   at 11% 77%, rgba(255,255,255,0.14) 0%, transparent 100%),
                 radial-gradient(1px   1px   at 96% 71%, rgba(255,255,255,0.16) 0%, transparent 100%);
             pointer-events: none;
+            animation: star-breathe 7s ease-in-out infinite alternate;
+        }
+        @keyframes star-breathe {
+            from { opacity: 0.65; }
+            to   { opacity: 1; }
+        }
+
+        /* Shooting stars */
+        .nt-shooting-star {
+            position: absolute;
+            width: 110px; height: 1.5px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.75), transparent);
+            border-radius: 999px;
+            opacity: 0;
+            pointer-events: none;
+            animation: nt-shoot 9s linear infinite;
+            animation-delay: var(--sd, 0s);
+        }
+        @keyframes nt-shoot {
+            0%   { transform: translate3d(0,0,0) rotate(-32deg); opacity: 0; }
+            2%   { opacity: 0.85; }
+            10%  { transform: translate3d(-300px,190px,0) rotate(-32deg); opacity: 0; }
+            100% { transform: translate3d(-300px,190px,0) rotate(-32deg); opacity: 0; }
         }
 
         /* Left column: text */
@@ -317,6 +335,17 @@
             z-index: 10;
         }
 
+        /* Staggered entrance for hero children */
+        @keyframes hero-in {
+            from { opacity: 0; transform: translateY(26px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .hero-in {
+            opacity: 0;
+            animation: hero-in 0.9s cubic-bezier(0.22,1,0.36,1) forwards;
+            animation-delay: calc(var(--d, 0) * 110ms + 80ms);
+        }
+
         /* Right column: orb container */
         .nt-orb-side {
             position: relative;
@@ -324,12 +353,15 @@
             min-height: calc(100svh - 64px);
         }
 
+        /* Parallax carrier (mouse-follow via JS) */
+        .nt-parallax { position: absolute; inset: 0; will-change: transform; }
+
         /* Orb sits inside right column — wider than column so it gets trimmed */
         .nt-orb-wrap {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: min(500px, 150%); /* oversized → clipped by hero overflow:hidden */
+            width: min(500px, 150%);
             height: min(500px, 150%);
             z-index: 2;
             animation: orb-float 7s ease-in-out infinite;
@@ -354,6 +386,11 @@
                 0  20px 60px rgba(200,130,28,0.26),
                 0   0  100px rgba(200,130,28,0.1),
                 0  50px 100px rgba(6,182,212,0.08);
+            animation: orb-arrive 1.4s cubic-bezier(0.22,1,0.36,1) both;
+        }
+        @keyframes orb-arrive {
+            from { opacity: 0; transform: scale(0.9); }
+            to   { opacity: 1; transform: scale(1); }
         }
 
         /* Specular highlight */
@@ -381,6 +418,42 @@
             filter: blur(5px);
         }
 
+        /* Comet arc orbiting the planet + leading satellite dot */
+        .nt-orb-orbit {
+            position: absolute;
+            inset: -5.5%;
+            border-radius: 50%;
+            animation: orbit-spin 16s linear infinite;
+            pointer-events: none;
+        }
+        .nt-orb-orbit::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(from -18deg,
+                transparent 0 68%,
+                rgba(34,211,238,0.02) 74%,
+                rgba(34,211,238,0.4) 96%,
+                transparent 100%);
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1px));
+        }
+        .nt-orb-orbit::after {
+            content: '';
+            position: absolute;
+            top: -2px; left: 50%;
+            width: 7px; height: 7px;
+            margin-left: -3.5px;
+            border-radius: 50%;
+            background: #22d3ee;
+            box-shadow: 0 0 12px 3px rgba(34,211,238,0.75);
+        }
+        @keyframes orbit-spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
         /* Ground glow */
         .nt-orb-glow {
             position: absolute;
@@ -399,86 +472,139 @@
         .nt-float-card {
             position: absolute;
             z-index: 15;
+            display: none; /* hidden on smallest screens */
+            opacity: 0;
+            animation: hero-in 0.9s cubic-bezier(0.22,1,0.36,1) forwards;
+            animation-delay: calc(var(--d, 0) * 110ms + 80ms);
+            will-change: transform;
+        }
+        @media (min-width: 480px) { .nt-float-card { display: block; } }
+        .nt-float-a { left: 2%;  bottom: 21%; }
+        .nt-float-b { right: 5%; top: 17%; }
+
+        .nt-fc-inner {
             background: rgba(255,255,255,0.055);
             backdrop-filter: blur(22px);
             -webkit-backdrop-filter: blur(22px);
             border: 1px solid rgba(255,255,255,0.1);
             border-radius: 14px;
-            padding: 11px 13px;
-            min-width: 110px;
-            display: none; /* hidden on smallest screens */
+            padding: 12px 14px;
+            min-width: 128px;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.35);
+            animation: card-drift var(--fd, 6s) ease-in-out infinite;
+            animation-delay: var(--fdd, 0s);
         }
-        .nt-float-left  { left: 50%;  bottom: 22%; }
-        .nt-float-right { right: 4%;  bottom: 16%; }
-        @media (min-width: 480px) { .nt-float-card { display: block; } }
-        .nt-fc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
+        @keyframes card-drift {
+            0%,100% { transform: translateY(0); }
+            50%      { transform: translateY(-10px); }
+        }
+        .nt-fc-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; }
         .nt-fc-label  { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.42); }
-        .nt-fc-icon   { width:18px; height:18px; border-radius:50%; border:1px solid rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:9px; color:rgba(255,255,255,0.45); }
-        .nt-fc-value  { font-size:20px; font-weight:800; color:#fff; line-height:1; margin-bottom:2px; }
+        .nt-fc-value  { font-size:19px; font-weight:800; color:#fff; line-height:1; margin-bottom:3px; }
         .nt-fc-sub    { font-size:9px; color:rgba(255,255,255,0.36); }
-        .nt-fc-bar    { height:2px; background:linear-gradient(to right,#06b6d4,transparent); border-radius:1px; margin-top:7px; width:55%; }
+        .nt-fc-bar    { position:relative; height:2px; background:rgba(255,255,255,0.08); border-radius:1px; margin-top:8px; overflow:hidden; }
+        .nt-fc-bar::after {
+            content:''; position:absolute; inset:0;
+            background:linear-gradient(to right,#06b6d4,#22d3ee);
+            transform-origin:left;
+            animation: bar-fill 1.1s cubic-bezier(0.22,1,0.36,1) 0.9s both;
+        }
+        @keyframes bar-fill { from { transform: scaleX(0); } to { transform: scaleX(0.7); } }
+        .nt-live-dot {
+            width:6px; height:6px; border-radius:50%;
+            background:#34d399;
+            box-shadow:0 0 0 0 rgba(52,211,153,0.6);
+            animation: live-ping 2s cubic-bezier(0.4,0,0.6,1) infinite;
+        }
+        @keyframes live-ping {
+            0%   { box-shadow: 0 0 0 0 rgba(52,211,153,0.55); }
+            70%  { box-shadow: 0 0 0 7px rgba(52,211,153,0); }
+            100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); }
+        }
+        .nt-spark { display:block; margin-top:8px; filter: drop-shadow(0 0 6px rgba(34,211,238,0.45)); }
+        .nt-spark path {
+            stroke-dasharray: 120;
+            stroke-dashoffset: 120;
+            animation: spark-draw 1.4s cubic-bezier(0.22,1,0.36,1) 0.8s forwards;
+        }
+        @keyframes spark-draw { to { stroke-dashoffset: 0; } }
 
         /* ── Text ── */
         .nt-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
             color: rgba(255,255,255,0.38);
             font-size: 10px; font-weight:600;
             letter-spacing: 0.08em; text-transform: uppercase;
             margin-bottom: 0.85rem;
         }
         .nt-h1 {
-            font-size: clamp(1.45rem, 5.5vw, 4.2rem);
+            font-size: clamp(2.2rem, 8.5vw, 4.2rem);
             font-weight: 800; line-height: 1.1;
             letter-spacing: -0.025em; color: #fff;
             margin-bottom: 0.75rem;
         }
         .nt-h1 span {
-            background: linear-gradient(135deg, #06b6d4 0%, #38bdf8 55%, #06b6d4 100%);
+            background: linear-gradient(120deg, #06b6d4 0%, #38bdf8 30%, #a5f3fc 50%, #38bdf8 70%, #06b6d4 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: gradient-slide 6s ease-in-out infinite;
+        }
+        @keyframes gradient-slide {
+            0%, 100% { background-position: 0% center; }
+            50%      { background-position: 100% center; }
         }
         .nt-desc {
             color: rgba(255,255,255,0.44);
-            font-size: 12px; line-height: 1.6;
+            font-size: 13px; line-height: 1.6;
+            max-width: 46ch;
             margin-bottom: 0.35rem;
         }
         .nt-terms { color:rgba(255,255,255,0.2); font-size:9px; margin-bottom:1.25rem; }
         .nt-cta-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
         .nt-btn-primary {
+            position: relative; overflow: hidden;
             display: inline-flex; align-items: center;
             background: #fff; color: #000;
             font-weight: 700; font-size: 12px;
             padding: 10px 20px; border-radius: 999px;
             text-decoration: none;
-            transition: background 0.18s, box-shadow 0.18s;
+            transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
             white-space: nowrap;
         }
-        .nt-btn-primary:hover { background:#dcfeff; box-shadow:0 0 40px rgba(6,182,212,0.25); }
+        .nt-btn-primary:hover { background:#dcfeff; box-shadow:0 0 40px rgba(6,182,212,0.25); transform: translateY(-1px); }
         .nt-btn-ghost {
             display: inline-flex; align-items: center; gap: 3px;
             color: rgba(255,255,255,0.5); font-size: 11px; font-weight:500;
-            text-decoration: none; transition: color 0.15s;
+            text-decoration: none; transition: color 0.15s, gap 0.15s;
         }
-        .nt-btn-ghost:hover { color:#fff; }
+        .nt-btn-ghost:hover { color:#fff; gap: 6px; }
 
         @keyframes orb-float {
             0%,100% { transform:translate(-50%, -50%) translateY(0); }
             50%      { transform:translate(-50%, -50%) translateY(-18px); }
         }
 
-        /* Mobile (< 768px): text up, orb down, orb stays round */
+        /* Mobile (< 768px): single column — text on top, orb below */
         @media (max-width: 767px) {
+            .nt-hero {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+            }
             .nt-hero-content {
-                align-self: start;
-                padding-top: 2.2rem;
+                padding-top: 2.6rem;
+                padding-right: 1.5rem;
             }
-            .nt-orb-side { align-self: end; }
+            .nt-orb-side { min-height: 46svh; }
             .nt-orb-wrap {
-                top: 55%;
+                top: 52%;
                 /* Both dimensions use vw so the orb is always a perfect circle */
-                width:  clamp(240px, 88vw, 420px);
-                height: clamp(240px, 88vw, 420px);
+                width:  clamp(240px, 76vw, 400px);
+                height: clamp(240px, 76vw, 400px);
             }
+            .nt-float-a { left: 4%;  bottom: 14%; }
+            .nt-float-b { right: 4%; top: 4%; }
         }
 
         /* Tablet / Desktop (768px+) */
@@ -500,19 +626,26 @@
 
     <section class="nt-hero">
 
+        {{-- Shooting stars --}}
+        <div class="nt-shooting-star" style="top:12%; left:78%; --sd:1.5s;"></div>
+        <div class="nt-shooting-star" style="top:6%; left:38%; --sd:6s; width:80px;"></div>
+
         {{-- LEFT: text --}}
         <div class="nt-hero-content">
-            <p class="nt-eyebrow">Live Markets &middot; Crypto &amp; Forex</p>
+            <p class="nt-eyebrow hero-in" style="--d:0">
+                <span class="nt-live-dot"></span>
+                Live Markets &middot; Crypto &amp; Forex
+            </p>
 
-            <h1 class="nt-h1">
+            <h1 class="nt-h1 hero-in" style="--d:1">
                 Elevate Your<br>
                 <span>Trading<br>Experience</span>
             </h1>
 
-            <p class="nt-desc">Conquer your world via trading.</p>
-            <p class="nt-terms">Capital at risk.</p>
+            <p class="nt-desc hero-in" style="--d:2">Trade crypto, forex and commodities on infrastructure built for speed — AI bots, instant deposits, and payouts in minutes.</p>
+            <p class="nt-terms hero-in" style="--d:3">Capital at risk.</p>
 
-            <div class="nt-cta-row">
+            <div class="nt-cta-row hero-in" style="--d:4">
                 <a href="{{ route('register') }}" class="nt-btn-primary">Start Trading</a>
                 <a href="{{ route('login') }}" class="nt-btn-ghost">
                     Login
@@ -525,9 +658,40 @@
 
         {{-- RIGHT: orb column — orb is oversized so it gets trimmed at edges --}}
         <div class="nt-orb-side">
-            <div class="nt-orb-wrap">
-                <div class="nt-orb"></div>
-                <div class="nt-orb-glow"></div>
+            <div class="nt-parallax" data-px="16" data-py="10">
+                <div class="nt-orb-wrap">
+                    <div class="nt-orb"></div>
+                    <div class="nt-orb-orbit"></div>
+                    <div class="nt-orb-glow"></div>
+                </div>
+            </div>
+
+            {{-- Floating glass stat cards --}}
+            <div class="nt-float-card nt-float-a" style="--d:6" data-px="32" data-py="20">
+                <div class="nt-fc-inner" style="--fd:6.5s">
+                    <div class="nt-fc-header">
+                        <span class="nt-fc-label">BTC/USD &middot; Buy</span>
+                        <span class="nt-live-dot"></span>
+                    </div>
+                    <p class="nt-fc-value" style="color:#34d399;">+$1,284.50</p>
+                    <p class="nt-fc-sub">Trade won &middot; just now</p>
+                    <svg class="nt-spark" width="96" height="24" viewBox="0 0 96 24" fill="none">
+                        <path d="M1 18 L13 13 L24 15 L36 9 L48 12 L60 5 L72 9 L84 3 L95 6"
+                              stroke="#22d3ee" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="nt-float-card nt-float-b" style="--d:7" data-px="24" data-py="30">
+                <div class="nt-fc-inner" style="--fd:7.5s; --fdd:0.8s;">
+                    <div class="nt-fc-header">
+                        <span class="nt-fc-label">24h Volume</span>
+                        <span style="font-size:9px;color:#34d399;font-weight:700;">▲ 12%</span>
+                    </div>
+                    <p class="nt-fc-value">$2.4B</p>
+                    <p class="nt-fc-sub">Across 96 market pairs</p>
+                    <div class="nt-fc-bar"></div>
+                </div>
             </div>
         </div>
 
@@ -542,9 +706,9 @@
                     ['96+', 'Market Pairs'],
                     ['150K+', 'Active Traders'],
                     ['99.9%', 'Platform Uptime'],
-                ] as [$val, $label])
-                <div>
-                    <p class="text-2xl font-black text-white">{{ $val }}</p>
+                ] as $i => [$val, $label])
+                <div class="reveal" style="--rd: {{ $i * 90 }}ms">
+                    <p class="text-2xl font-black text-white" data-countup="{{ $val }}">{{ $val }}</p>
                     <p class="text-xs text-gray-500 mt-0.5 font-medium">{{ $label }}</p>
                 </div>
                 @endforeach
@@ -565,6 +729,7 @@
             align-items: center;
             will-change: transform;
             overflow: hidden;
+            box-shadow: 0 -34px 90px rgba(0,0,0,0.55);
         }
         .fa-inner {
             width: 100%;
@@ -618,10 +783,18 @@
             pointer-events: none;
             z-index: 1;
         }
+        /* Radar rings (section 01) */
+        .fa-radar-sweep {
+            position: absolute; inset: 0; border-radius: 50%;
+            background: conic-gradient(from 0deg, rgba(6,182,212,0.22) 0%, transparent 24%);
+            animation: orbit-spin 6s linear infinite;
+            -webkit-mask: radial-gradient(farthest-side, #000 0%, #000 100%);
+        }
         @media (min-width: 640px)  { .fa-inner { padding: 0 1.5rem; } }
         @media (min-width: 1024px) { .fa-inner { padding: 0 2rem; } }
         @media (max-width: 767px) {
-            .fa-inner { grid-template-columns: 1fr; padding-top: 4rem; padding-bottom: 2rem; gap: 2rem; }
+            .fa-section { height: auto; min-height: 100svh; }
+            .fa-inner { grid-template-columns: 1fr; padding-top: 4.5rem; padding-bottom: 2.5rem; gap: 2rem; }
             .fa-visual { justify-content: flex-start; }
         }
     </style>
@@ -638,6 +811,7 @@
                 </div>
                 <div class="fa-visual">
                     <div style="position:relative;width:210px;height:210px;flex-shrink:0;">
+                        <div class="fa-radar-sweep"></div>
                         <div style="position:absolute;inset:0;border-radius:50%;border:1px solid rgba(6,182,212,0.1);"></div>
                         <div style="position:absolute;inset:15%;border-radius:50%;border:1px solid rgba(6,182,212,0.16);"></div>
                         <div style="position:absolute;inset:30%;border-radius:50%;border:1px solid rgba(6,182,212,0.2);"></div>
@@ -752,8 +926,8 @@
     {{-- ══════════════════ HOW IT WORKS ══════════════════ --}}
     <section id="how-it-works" class="py-24" style="background: radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.04) 0%, transparent 70%), #030712;">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p class="text-cyan-400 text-sm font-semibold uppercase tracking-widest mb-3">Get Started</p>
-            <h2 class="text-4xl lg:text-5xl font-black text-white mb-16">Trade in 3 steps</h2>
+            <p class="text-cyan-400 text-sm font-semibold uppercase tracking-widest mb-3 reveal">Get Started</p>
+            <h2 class="text-4xl lg:text-5xl font-black text-white mb-16 reveal" style="--rd:80ms">Trade in 3 steps</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 relative">
                 {{-- Connector line --}}
@@ -763,9 +937,9 @@
                     ['01', 'Create Account', 'Sign up with your email in seconds.'],
                     ['02', 'Fund Wallet', 'Deposit via M-Pesa or bank transfer.'],
                     ['03', 'Start Trading', 'Pick an asset and place your trade.'],
-                ] as [$num, $title, $desc])
-                <div class="flex flex-col items-center">
-                    <div class="w-16 h-16 rounded-2xl border border-cyan-500/30 bg-cyan-500/5 flex items-center justify-center mb-5 relative z-10">
+                ] as $i => [$num, $title, $desc])
+                <div class="flex flex-col items-center reveal" style="--rd: {{ 150 + $i * 130 }}ms">
+                    <div class="w-16 h-16 rounded-2xl border border-cyan-500/30 bg-cyan-500/5 flex items-center justify-center mb-5 relative z-10 transition-all duration-300 hover:border-cyan-400/60 hover:bg-cyan-500/10 hover:-translate-y-1 hover:shadow-[0_10px_40px_rgba(6,182,212,0.2)]">
                         <span class="text-2xl font-black text-cyan-400">{{ $num }}</span>
                     </div>
                     <h3 class="font-bold text-white text-lg mb-2">{{ $title }}</h3>
@@ -774,7 +948,7 @@
                 @endforeach
             </div>
 
-            <div class="mt-14">
+            <div class="mt-14 reveal" style="--rd:500ms">
                 <a href="{{ route('register') }}"
                    class="cta-btn inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-base">
                     Open Free Account
@@ -787,22 +961,23 @@
     </section>
 
     {{-- ══════════════════ MARKETS TICKER ══════════════════ --}}
-    <section id="markets" class="border-y border-white/5 py-5 bg-gray-950/60 overflow-hidden">
-        <div class="flex gap-12 animate-[scroll_30s_linear_infinite] whitespace-nowrap" style="animation: ticker-scroll 30s linear infinite;">
-            @php
-                $tickers = [
-                    ['BTC/USD', '+2.4%', true], ['ETH/USD', '+1.1%', true], ['XRP/USD', '-0.5%', false],
-                    ['EUR/USD', '+0.3%', true], ['GBP/USD', '-0.2%', false], ['GOLD', '+0.8%', true],
-                    ['OIL', '-1.2%', false], ['S&P 500', '+0.6%', true], ['NASDAQ', '+1.3%', true],
-                    ['BTC/USD', '+2.4%', true], ['ETH/USD', '+1.1%', true], ['XRP/USD', '-0.5%', false],
-                    ['EUR/USD', '+0.3%', true], ['GBP/USD', '-0.2%', false], ['GOLD', '+0.8%', true],
-                ];
-            @endphp
-            @foreach($tickers as [$pair, $change, $up])
-            <div class="inline-flex items-center gap-2 flex-shrink-0">
-                <span class="text-sm font-semibold text-white">{{ $pair }}</span>
-                <span class="text-xs font-medium {{ $up ? 'text-emerald-400' : 'text-red-400' }}">{{ $change }}</span>
-            </div>
+    <section id="markets" class="border-y border-white/5 py-5 bg-gray-950/60 overflow-hidden ticker-mask">
+        @php
+            $tickers = [
+                ['BTC/USD', '+2.4%', true], ['ETH/USD', '+1.1%', true], ['XRP/USD', '-0.5%', false],
+                ['EUR/USD', '+0.3%', true], ['GBP/USD', '-0.2%', false], ['GOLD', '+0.8%', true],
+                ['OIL', '-1.2%', false], ['S&P 500', '+0.6%', true], ['NASDAQ', '+1.3%', true],
+            ];
+        @endphp
+        <div class="ticker-track">
+            {{-- Exact double of the set → translateX(-50%) loops seamlessly --}}
+            @foreach([1, 2] as $pass)
+                @foreach($tickers as [$pair, $change, $up])
+                <div class="ticker-item">
+                    <span class="text-sm font-semibold text-white">{{ $pair }}</span>
+                    <span class="text-xs font-medium {{ $up ? 'text-emerald-400' : 'text-red-400' }}">{{ $change }}</span>
+                </div>
+                @endforeach
             @endforeach
         </div>
     </section>
@@ -811,19 +986,20 @@
     <section id="faq" class="py-24 bg-gray-950">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <p class="text-cyan-400 text-sm font-semibold uppercase tracking-widest mb-3">FAQ</p>
-                <h2 class="text-4xl font-black text-white">Common questions</h2>
+                <p class="text-cyan-400 text-sm font-semibold uppercase tracking-widest mb-3 reveal">FAQ</p>
+                <h2 class="text-4xl font-black text-white reveal" style="--rd:80ms">Common questions</h2>
             </div>
 
-            <div class="space-y-3" x-data="{ open: null }">
+            <div class="space-y-3">
                 @foreach([
                     ['Is the platform safe?', 'Yes — funds are held in segregated accounts with 256-bit SSL encryption and 2FA.'],
                     ['What is the minimum deposit?', 'Start with as little as KES 1,000. Demo accounts are free.'],
                     ['Which assets can I trade?', 'Forex, Crypto, Commodities, and Indices — 96+ pairs total.'],
                     ['How do I withdraw?', 'Withdrawals process within 24 hours to M-Pesa or bank.'],
                     ['Can I use trading bots?', 'Yes — our AI bots automate your strategy around the clock.'],
-                ] as [$q, $a])
-                <div class="glassmorphism rounded-xl overflow-hidden" x-data="{ show: false }">
+                ] as $i => [$q, $a])
+                <div class="glassmorphism rounded-xl overflow-hidden reveal transition-colors duration-300 hover:border-cyan-500/25"
+                     style="--rd: {{ $i * 70 }}ms" x-data="{ show: false }">
                     <button @click="show = !show"
                             class="w-full flex items-center justify-between px-5 py-4 text-left">
                         <span class="font-semibold text-white text-sm">{{ $q }}</span>
@@ -845,15 +1021,17 @@
     {{-- ══════════════════ CTA BANNER ══════════════════ --}}
     <section class="py-20" style="background: radial-gradient(ellipse at 50% 50%, rgba(6,182,212,0.08) 0%, transparent 70%), #030712;">
         <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-4xl lg:text-5xl font-black text-white mb-8">Ready to trade?</h2>
-            <a href="{{ route('register') }}"
-               class="cta-btn inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-lg">
-                Create Free Account
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                </svg>
-            </a>
-            <p class="text-xs text-gray-600 mt-4">No credit card required</p>
+            <h2 class="text-4xl lg:text-5xl font-black text-white mb-8 reveal">Ready to trade?</h2>
+            <div class="reveal" style="--rd:120ms">
+                <a href="{{ route('register') }}"
+                   class="cta-btn inline-flex items-center gap-2 px-10 py-4 rounded-2xl font-bold text-lg">
+                    Create Free Account
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                    </svg>
+                </a>
+                <p class="text-xs text-gray-600 mt-4">No credit card required</p>
+            </div>
         </div>
     </section>
 
@@ -874,22 +1052,92 @@
         </div>
     </footer>
 
-    <style>
-        @keyframes ticker-scroll {
-            0%   { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
-    </style>
-
     <script>
         (function () {
+            var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            /* ── Navbar background on scroll ── */
             var nav = document.querySelector('nav.nav-glassmorphism');
-            if (!nav) return;
-            function onScroll() {
-                nav.classList.toggle('nav-scrolled', window.scrollY > 30);
+            if (nav) {
+                var onScroll = function () {
+                    nav.classList.toggle('nav-scrolled', window.scrollY > 30);
+                };
+                window.addEventListener('scroll', onScroll, { passive: true });
+                onScroll();
             }
-            window.addEventListener('scroll', onScroll, { passive: true });
-            onScroll();
+
+            /* ── Scroll reveal ── */
+            var revealEls = document.querySelectorAll('.reveal');
+            if (reduced || !('IntersectionObserver' in window)) {
+                revealEls.forEach(function (el) { el.classList.add('is-visible'); });
+            } else {
+                var io = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            io.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+                revealEls.forEach(function (el) { io.observe(el); });
+            }
+
+            /* ── Stat count-up (parses "$2.4B+", "99.9%" etc.) ── */
+            function countUp(el) {
+                var m = el.dataset.countup.match(/^([^0-9]*)([\d.]+)(.*)$/);
+                if (!m) return;
+                var prefix = m[1], target = parseFloat(m[2]), suffix = m[3];
+                var decimals = (m[2].split('.')[1] || '').length;
+                var start = null, duration = 1400;
+                function frame(ts) {
+                    if (!start) start = ts;
+                    var p = Math.min((ts - start) / duration, 1);
+                    var eased = 1 - Math.pow(1 - p, 3);
+                    el.textContent = prefix + (target * eased).toFixed(decimals) + suffix;
+                    if (p < 1) requestAnimationFrame(frame);
+                }
+                requestAnimationFrame(frame);
+            }
+            var countEls = document.querySelectorAll('[data-countup]');
+            if (!reduced && 'IntersectionObserver' in window) {
+                var cio = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (entry.isIntersecting) {
+                            countUp(entry.target);
+                            cio.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.6 });
+                countEls.forEach(function (el) { cio.observe(el); });
+            }
+
+            /* ── Hero mouse parallax (desktop, fine pointers only) ── */
+            var hero = document.querySelector('.nt-hero');
+            if (hero && !reduced && window.matchMedia('(pointer: fine)').matches) {
+                var items = Array.prototype.slice.call(hero.querySelectorAll('[data-px]'));
+                var tx = 0, ty = 0, cx = 0, cy = 0, raf = null;
+                function loop() {
+                    cx += (tx - cx) * 0.06;
+                    cy += (ty - cy) * 0.06;
+                    items.forEach(function (el) {
+                        var px = parseFloat(el.dataset.px || 0), py = parseFloat(el.dataset.py || 0);
+                        el.style.transform = 'translate3d(' + (cx * px).toFixed(2) + 'px,' + (cy * py).toFixed(2) + 'px,0)';
+                    });
+                    if (Math.abs(tx - cx) > 0.001 || Math.abs(ty - cy) > 0.001) {
+                        raf = requestAnimationFrame(loop);
+                    } else {
+                        raf = null;
+                    }
+                }
+                function kick() { if (!raf) raf = requestAnimationFrame(loop); }
+                hero.addEventListener('pointermove', function (e) {
+                    var r = hero.getBoundingClientRect();
+                    tx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+                    ty = ((e.clientY - r.top) / r.height - 0.5) * 2;
+                    kick();
+                });
+                hero.addEventListener('pointerleave', function () { tx = 0; ty = 0; kick(); });
+            }
         })();
     </script>
 
@@ -899,6 +1147,7 @@
     <script>
         (function () {
             if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') return;
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             gsap.registerPlugin(ScrollTrigger);
 
             var sections = gsap.utils.toArray('[data-flow-section]');
@@ -907,14 +1156,14 @@
 
                 if (i > 0) {
                     gsap.fromTo(section,
-                        { rotation: 30, transformOrigin: 'bottom left' },
+                        { rotation: 22, transformOrigin: 'bottom left' },
                         {
                             rotation: 0,
                             ease: 'none',
                             scrollTrigger: {
                                 trigger: section,
                                 start: 'top bottom',
-                                end: 'top 25%',
+                                end: 'top 22%',
                                 scrub: true,
                             }
                         }
@@ -929,6 +1178,29 @@
                         pin: true,
                         pinSpacing: false,
                     });
+                }
+
+                // Content lifts in with a stagger as the section arrives
+                var inner = section.querySelector('.fa-inner');
+                if (inner) {
+                    gsap.from(inner.children, {
+                        y: 44, opacity: 0,
+                        duration: 0.9, ease: 'power3.out', stagger: 0.14,
+                        scrollTrigger: { trigger: section, start: 'top 55%', once: true }
+                    });
+                }
+
+                // Giant background number drifts slower than the section (parallax)
+                var num = section.querySelector('.fa-bg-num');
+                if (num) {
+                    gsap.fromTo(num,
+                        { yPercent: 16 },
+                        {
+                            yPercent: -6,
+                            ease: 'none',
+                            scrollTrigger: { trigger: section, start: 'top bottom', end: 'bottom top', scrub: true }
+                        }
+                    );
                 }
             });
         })();
