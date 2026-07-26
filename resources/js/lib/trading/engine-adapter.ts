@@ -50,14 +50,30 @@ class NextTradeEngineAdapter implements IEngineAdapter {
 
     // ─── Historical data ──────────────────────────────────────────────────────
 
+    /**
+     * JSON GET that always identifies itself as an API call (so the server never
+     * mistakes it for browser navigation) and sends the user to login when the
+     * session has expired instead of silently polling forever.
+     */
+    private async getJson<T>(url: string): Promise<T | null> {
+        const res = await fetch(url, {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' },
+        });
+        if (res.status === 401 || res.status === 419) {
+            this.destroy();
+            window.location.href = '/login';
+            return null;
+        }
+        if (!res.ok) return null;
+        return res.json() as Promise<T>;
+    }
+
     async getHistoricalTicks(assetId: number): Promise<PriceTick[]> {
         try {
-            const res = await fetch(`/trade/assets/${assetId}/ticks`, {
-                credentials: 'same-origin',
-            });
-            if (!res.ok) return [];
-            const raw: Array<{ price: number | string; time: string; direction?: string }> =
-                await res.json();
+            const raw = await this.getJson<Array<{ price: number | string; time: string; direction?: string }>>(
+                `/trade/assets/${assetId}/ticks`
+            );
             if (!Array.isArray(raw)) return [];
             return raw.map(t => ({
                 price:     Number(t.price),
@@ -134,9 +150,8 @@ class NextTradeEngineAdapter implements IEngineAdapter {
 
     private async pollTrades(): Promise<void> {
         try {
-            const res  = await fetch('/trade/active', { credentials: 'same-origin' });
-            if (!res.ok) return;
-            const data = await res.json();
+            const data = await this.getJson<{ trades?: Trade[]; wallet_balance?: number }>('/trade/active');
+            if (!data) return;
 
             const prevIds  = new Set(this.active.map(t => t.id));
             this.active    = (data.trades ?? []) as Trade[];
@@ -150,9 +165,8 @@ class NextTradeEngineAdapter implements IEngineAdapter {
 
             if (settled.length > 0) {
                 try {
-                    const rRes     = await fetch('/trade/recent', { credentials: 'same-origin' });
-                    const recent   = await rRes.json();
-                    this.completed = Array.isArray(recent) ? (recent as Trade[]) : [];
+                    const recent   = await this.getJson<Trade[]>('/trade/recent');
+                    this.completed = Array.isArray(recent) ? recent : [];
                 } catch { /* ignore */ }
             }
 
@@ -177,12 +191,7 @@ class NextTradeEngineAdapter implements IEngineAdapter {
             const url = this.lastTickTime
                 ? `/trade/assets/${this.assetId}/ticks?since=${encodeURIComponent(this.lastTickTime)}`
                 : `/trade/assets/${this.assetId}/ticks?limit=1`;
-            const res = await fetch(url, {
-                credentials: 'same-origin',
-            });
-            if (!res.ok) return;
-            const raw: Array<{ price: number | string; time: string; direction?: string }> =
-                await res.json();
+            const raw = await this.getJson<Array<{ price: number | string; time: string; direction?: string }>>(url);
             if (!Array.isArray(raw) || raw.length === 0) return;
 
             // Server already filters by `since`; keep the client filter as a guard

@@ -91,8 +91,14 @@ class TradeController extends Controller
         }
     }
 
-    public function active(Request $request): JsonResponse
+    public function active(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
     {
+        // Browser navigation (e.g. a stale intended-URL redirect after login)
+        // should land on the trading terminal, not raw JSON.
+        if (! $request->expectsJson()) {
+            return redirect()->route('trade.index');
+        }
+
         $user       = auth()->user();
         $walletMode = session('wallet_mode', 'demo');
 
@@ -127,8 +133,12 @@ class TradeController extends Controller
         ]);
     }
 
-    public function recent(): JsonResponse
+    public function recent(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
     {
+        if (! $request->expectsJson()) {
+            return redirect()->route('trade.index');
+        }
+
         $trades = auth()->user()
             ->trades()
             ->whereIn('status', ['won', 'lost', 'draw', 'cancelled'])

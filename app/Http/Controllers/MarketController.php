@@ -16,8 +16,12 @@ class MarketController extends Controller
         private SimulationConfigService $simConfig
     ) {}
 
-    public function snapshot(): JsonResponse
+    public function snapshot(Request $request): JsonResponse|\Illuminate\Http\RedirectResponse
     {
+        if (! $request->expectsJson()) {
+            return redirect()->route('trade.index');
+        }
+
         $config = $this->simConfig->getActiveConfig();
 
         $assets = TradingAsset::where('is_active', true)
@@ -41,8 +45,12 @@ class MarketController extends Controller
         ]);
     }
 
-    public function ticks(Request $request, TradingAsset $asset): JsonResponse
+    public function ticks(Request $request, TradingAsset $asset): JsonResponse|\Illuminate\Http\RedirectResponse
     {
+        if (! $request->expectsJson()) {
+            return redirect()->route('trade.index');
+        }
+
         $since = null;
         if ($request->filled('since')) {
             try {
