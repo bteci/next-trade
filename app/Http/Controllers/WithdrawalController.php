@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Withdrawal;
 use App\Services\CurrencyService;
 use App\Services\NotificationService;
+use App\Services\UserActivityLogService;
 use App\Services\WalletService;
 use App\Services\WithdrawalService;
 use Illuminate\Http\JsonResponse;
@@ -16,10 +17,11 @@ use RuntimeException;
 class WithdrawalController extends Controller
 {
     public function __construct(
-        private WithdrawalService   $withdrawalService,
-        private WalletService       $walletService,
-        private CurrencyService     $currency,
-        private NotificationService $notifier
+        private WithdrawalService      $withdrawalService,
+        private WalletService          $walletService,
+        private CurrencyService        $currency,
+        private NotificationService    $notifier,
+        private UserActivityLogService $activityLog
     ) {}
 
     public function index(): View
@@ -75,6 +77,10 @@ class WithdrawalController extends Controller
                 'Your M-Pesa withdrawal of $' . number_format($withdrawal->usd_amount, 2) . ' has been submitted and is pending admin review.',
                 ['withdrawal_id' => $withdrawal->id]);
 
+            $this->activityLog->log($user, 'withdrawal_requested',
+                'M-Pesa withdrawal of $' . number_format($withdrawal->usd_amount, 2),
+                ['withdrawal_id' => $withdrawal->id]);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success'  => true,
@@ -114,6 +120,10 @@ class WithdrawalController extends Controller
             $user = auth()->user();
             $this->notifier->send($user, 'withdrawal_requested', 'Withdrawal Requested',
                 'Your USDT withdrawal of $' . number_format($withdrawal->usd_amount, 2) . ' has been submitted and is pending admin review.',
+                ['withdrawal_id' => $withdrawal->id]);
+
+            $this->activityLog->log($user, 'withdrawal_requested',
+                'USDT withdrawal of $' . number_format($withdrawal->usd_amount, 2),
                 ['withdrawal_id' => $withdrawal->id]);
 
             if ($request->expectsJson()) {

@@ -2,9 +2,6 @@
 
 namespace App\Providers;
 
-use App\Listeners\CreateUserWallets;
-use Illuminate\Auth\Events\Registered;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,6 +10,6 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Event::listen(Registered::class, CreateUserWallets::class);
+        // Listeners in app/Listeners are auto-discovered (CreateUserWallets, LogAuthActivity).
     }
 }

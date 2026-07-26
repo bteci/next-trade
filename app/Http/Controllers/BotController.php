@@ -6,6 +6,7 @@ use App\Models\BotEarning;
 use App\Models\BotInvestment;
 use App\Models\BotPlan;
 use App\Services\BotInvestmentService;
+use App\Services\UserActivityLogService;
 use App\Services\WalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -15,8 +16,9 @@ use Illuminate\View\View;
 class BotController extends Controller
 {
     public function __construct(
-        private BotInvestmentService $botService,
-        private WalletService        $walletService
+        private BotInvestmentService   $botService,
+        private WalletService          $walletService,
+        private UserActivityLogService $activityLog
     ) {}
 
     public function index(): View
@@ -51,6 +53,10 @@ class BotController extends Controller
 
         try {
             $investment = $this->botService->invest($user, $plan, (float) $validated['amount'], $walletMode);
+
+            $this->activityLog->log($user, 'bot_investment',
+                'Invested $' . number_format((float) $investment->principal_amount, 2) . ' in ' . $plan->name,
+                ['investment_id' => $investment->id, 'wallet' => $walletMode]);
 
             if ($request->expectsJson()) {
                 return response()->json([

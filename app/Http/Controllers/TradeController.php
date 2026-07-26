@@ -5,13 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Trade;
 use App\Models\TradingAsset;
 use App\Services\TradingEngineService;
+use App\Services\UserActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TradeController extends Controller
 {
-    public function __construct(private TradingEngineService $engine) {}
+    public function __construct(
+        private TradingEngineService   $engine,
+        private UserActivityLogService $activityLog
+    ) {}
 
     public function index(): View
     {
@@ -71,6 +75,10 @@ class TradeController extends Controller
             );
 
             $wallet->refresh();
+
+            $this->activityLog->log($user, 'trade_placed',
+                ucfirst($validated['direction']) . ' $' . number_format($trade->stake_amount, 2) . ' on ' . $asset->symbol,
+                ['trade_id' => $trade->id, 'wallet' => $walletMode]);
 
             return response()->json([
                 'success'        => true,

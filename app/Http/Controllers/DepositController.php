@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PaymentDeposit;
 use App\Services\CurrencyService;
 use App\Services\DepositService;
+use App\Services\UserActivityLogService;
 use App\Services\WalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -15,9 +16,10 @@ use RuntimeException;
 class DepositController extends Controller
 {
     public function __construct(
-        private DepositService  $depositService,
-        private CurrencyService $currency,
-        private WalletService   $walletService
+        private DepositService         $depositService,
+        private CurrencyService        $currency,
+        private WalletService          $walletService,
+        private UserActivityLogService $activityLog
     ) {}
 
     public function show(Request $request, PaymentDeposit $deposit): View|RedirectResponse
@@ -63,6 +65,10 @@ class DepositController extends Controller
                 $validated['wallet_type']
             );
 
+            $this->activityLog->log($user, 'deposit_initiated',
+                'M-Pesa deposit of KES ' . number_format((float) $validated['kes_amount'], 2),
+                ['deposit_id' => $deposit->id, 'wallet' => $validated['wallet_type']]);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success'  => true,
@@ -107,6 +113,10 @@ class DepositController extends Controller
                 $request->file('proof'),
                 $validated['wallet_type']
             );
+
+            $this->activityLog->log($user, 'deposit_submitted',
+                'USDT deposit of $' . number_format((float) $validated['amount'], 2) . ' submitted for review',
+                ['deposit_id' => $deposit->id, 'wallet' => $validated['wallet_type']]);
 
             if ($request->expectsJson()) {
                 return response()->json([

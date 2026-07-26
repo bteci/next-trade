@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminHealthController;
 use App\Http\Controllers\Admin\AdminPermissionController;
 use App\Http\Controllers\Admin\AdminRoleController;
 use App\Http\Controllers\Admin\AdminSystemSettingsController;
+use App\Http\Controllers\Admin\AdminTradeController;
 use App\Http\Controllers\Admin\AdminTradingEngineController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminWithdrawalController;
@@ -165,6 +166,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // ── Trading engine ─────────────────────────────────────────────────────
     Route::middleware('permission:view_trading_engine')->group(function () {
         Route::get('/trading-engine', [AdminTradingEngineController::class, 'index'])->name('trading-engine');
+        Route::get('/trades',         [AdminTradeController::class, 'index'])->name('trades');
     });
     Route::middleware('permission:manage_trading_engine')->group(function () {
         Route::post('/trading-engine/settings',                    [AdminTradingEngineController::class, 'updateSettings'])->name('trading-engine.settings');

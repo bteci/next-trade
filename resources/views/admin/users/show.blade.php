@@ -164,11 +164,11 @@
         @forelse($user->trades as $trade)
         <div class="flex items-center justify-between px-5 py-3">
             <div>
-                <p class="text-xs font-medium" :class="isDark ? 'text-white' : 'text-gray-900'">{{ $trade->asset->symbol ?? '—' }} · {{ ucfirst($trade->direction) }}</p>
+                <p class="text-xs font-medium" :class="isDark ? 'text-white' : 'text-gray-900'">{{ $trade->tradingAsset->symbol ?? '—' }} · {{ ucfirst($trade->direction) }}</p>
                 <p class="text-xs text-gray-500">{{ $trade->created_at->format('M j, Y H:i') }}</p>
             </div>
             <div class="text-right">
-                <p class="text-xs font-mono">${{ number_format($trade->amount, 2) }}</p>
+                <p class="text-xs font-mono">${{ number_format($trade->stake_amount, 2) }}</p>
                 <p class="text-xs {{ $trade->status === 'won' ? 'text-emerald-400' : ($trade->status === 'lost' ? 'text-red-400' : 'text-amber-400') }} capitalize">{{ $trade->status }}</p>
             </div>
         </div>

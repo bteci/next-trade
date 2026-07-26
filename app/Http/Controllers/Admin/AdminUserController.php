@@ -60,7 +60,7 @@ class AdminUserController extends Controller
             'wallets', 'adminRoles.permissions', 'bans.bannedBy',
             'paymentDeposits' => fn($q) => $q->latest()->limit(5),
             'withdrawals'     => fn($q) => $q->latest()->limit(5),
-            'trades'          => fn($q) => $q->latest()->limit(5),
+            'trades'          => fn($q) => $q->with('tradingAsset')->latest()->limit(5),
             'botInvestments'  => fn($q) => $q->latest()->limit(5),
         ]);
 

@@ -36,14 +36,20 @@ class SimulationConfigService
 
     // ─── Defaults ─────────────────────────────────────────────────────────────
 
-    public function createDefaultSettings(): void
+    /**
+     * $overwriteExisting = true restores factory values on existing rows (admin
+     * "Reset Defaults"). Pass false when seeding so deploys never clobber
+     * admin-tuned values or the currently active difficulty.
+     */
+    public function createDefaultSettings(bool $overwriteExisting = true): void
     {
         $defaults = self::defaults();
         foreach ($defaults as $data) {
-            SimulationSetting::updateOrCreate(
-                ['difficulty' => $data['difficulty']],
-                $data
-            );
+            if ($overwriteExisting) {
+                SimulationSetting::updateOrCreate(['difficulty' => $data['difficulty']], $data);
+            } else {
+                SimulationSetting::firstOrCreate(['difficulty' => $data['difficulty']], $data);
+            }
         }
     }
 
@@ -53,7 +59,7 @@ class SimulationConfigService
             [
                 'name'                  => 'Easy Mode',
                 'difficulty'            => 'easy',
-                'win_probability'       => 65.00,
+                'win_probability'       => 70.00,
                 'volatility_multiplier' => 0.8000,
                 'trend_strength'        => 0.3000,
                 'min_profit_multiplier' => 0.7000,
@@ -65,7 +71,7 @@ class SimulationConfigService
             [
                 'name'                  => 'Normal Mode',
                 'difficulty'            => 'normal',
-                'win_probability'       => 50.00,
+                'win_probability'       => 40.00,
                 'volatility_multiplier' => 1.0000,
                 'trend_strength'        => 0.5000,
                 'min_profit_multiplier' => 0.6000,
@@ -77,7 +83,7 @@ class SimulationConfigService
             [
                 'name'                  => 'Hard Mode',
                 'difficulty'            => 'hard',
-                'win_probability'       => 40.00,
+                'win_probability'       => 30.00,
                 'volatility_multiplier' => 1.3000,
                 'trend_strength'        => 0.7000,
                 'min_profit_multiplier' => 0.5000,
@@ -89,7 +95,7 @@ class SimulationConfigService
             [
                 'name'                  => 'Extreme Mode',
                 'difficulty'            => 'extreme',
-                'win_probability'       => 30.00,
+                'win_probability'       => 5.00,
                 'volatility_multiplier' => 1.8000,
                 'trend_strength'        => 1.0000,
                 'min_profit_multiplier' => 0.4000,

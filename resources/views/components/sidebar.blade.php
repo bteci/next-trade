@@ -96,6 +96,7 @@
                     ['route' => 'admin.deposits',       'label' => 'Deposits',        'icon' => 'inbox'],
                     ['route' => 'admin.withdrawals',    'label' => 'Withdrawals',     'icon' => 'arrow-up-circle'],
                     ['route' => 'admin.trading-engine', 'label' => 'Trading Engine',  'icon' => 'activity'],
+                    ['route' => 'admin.trades',         'label' => 'Trades',          'icon' => 'trending-up'],
                     ['route' => 'admin.assets',         'label' => 'Assets',          'icon' => 'database'],
                     ['route' => 'admin.bots',           'label' => 'Bot Plans',       'icon' => 'bot'],
                     ['route' => 'admin.roles',          'label' => 'Roles',           'icon' => 'tag'],
@@ -120,6 +121,7 @@
                             @case('shield')<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>@break
                             @case('users')<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>@break
                             @case('activity')<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M22 12h-4l-3 9L9 3l-3 9H2"/>@break
+                            @case('trending-up')<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>@break
                             @case('dollar-sign')<line x1="12" y1="1" x2="12" y2="23" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>@break
                             @case('lock')<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>@break
                             @case('database')<ellipse cx="12" cy="5" rx="9" ry="3" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12c0 1.66-4.03 3-9 3S3 13.66 3 12"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>@break
