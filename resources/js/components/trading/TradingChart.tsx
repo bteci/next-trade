@@ -34,6 +34,9 @@ export function TradingChart({ asset, timeframe, activeTrades }: Props) {
     const unsubTickRef   = useRef<(() => void) | null>(null);
     const loadedRef      = useRef(false);
     const pendingRef     = useRef<import('../../lib/trading/chart-types').PriceTick[]>([]);
+    // True while the latest bar is in view; pan/zoom into history turns it off
+    // so live ticks stop yanking the viewport back to real time.
+    const followRef      = useRef(true);
 
     // ─── Chart initialisation (once per asset + timeframe) ────────────────────
 
@@ -142,6 +145,14 @@ export function TradingChart({ asset, timeframe, activeTrades }: Props) {
         builderRef.current = new CandleBuilder(timeframe);
         loadedRef.current  = false;
         pendingRef.current = [];
+        followRef.current  = true;
+
+        // Follow real time only while the user is at the right edge. scrollPosition()
+        // is ≈ rightOffset when pinned to the newest bar and goes negative once the
+        // user pans/zooms into history; scrolling back to the edge resumes following.
+        chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+            followRef.current = chart.timeScale().scrollPosition() > -2;
+        });
 
         // Subscribe to live ticks *before* async history load to buffer any
         // ticks that arrive during the fetch.
@@ -153,7 +164,9 @@ export function TradingChart({ asset, timeframe, activeTrades }: Props) {
             if (!seriesRef.current) return;
             const { candle } = builderRef.current.processTick(tick);
             seriesRef.current.update(candle as CandlestickData);
-            chartRef.current?.timeScale().scrollToRealTime();
+            if (followRef.current) {
+                chartRef.current?.timeScale().scrollToRealTime();
+            }
         });
 
         // Load history, then flush buffered ticks

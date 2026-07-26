@@ -34,7 +34,8 @@ class TradingEngineService
         $multiplier     = $config ? (float) $config->volatility_multiplier : 1.0;
         $volatility     = $baseVolatility * $multiplier;
 
-        $z = $this->randomNormal();
+        // Cap extreme draws so a single tick can never print a monster wick
+        $z = max(-3.0, min(3.0, $this->randomNormal()));
 
         if ($biasDirection !== null) {
             // Settlement tick: force direction, keep realistic magnitude
@@ -48,7 +49,15 @@ class TradingEngineService
                 'bearish' => -0.0002 * $trendStrength,
                 default   => 0.0,
             };
-            $changePercent = ($z * $volatility) + $biasFactor;
+
+            // Mean reversion: gently pull the walk back toward base price so it
+            // never drifts into the hard clamp rails (10%–500% of base)
+            $basePrice = (float) $asset->base_price;
+            $reversion = $basePrice > 0
+                ? (($basePrice - $currentPrice) / $basePrice) * 0.004
+                : 0.0;
+
+            $changePercent = ($z * $volatility) + $biasFactor + $reversion;
         }
 
         $newPrice = $currentPrice * (1.0 + $changePercent);

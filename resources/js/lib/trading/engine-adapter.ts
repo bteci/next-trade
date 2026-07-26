@@ -172,7 +172,12 @@ class NextTradeEngineAdapter implements IEngineAdapter {
     private async pollTicks(): Promise<void> {
         if (this.assetId === null) return;
         try {
-            const res = await fetch(`/trade/assets/${this.assetId}/ticks`, {
+            // Incremental fetch: only ticks newer than the last one we processed.
+            // First poll after an asset switch just needs the latest tick.
+            const url = this.lastTickTime
+                ? `/trade/assets/${this.assetId}/ticks?since=${encodeURIComponent(this.lastTickTime)}`
+                : `/trade/assets/${this.assetId}/ticks?limit=1`;
+            const res = await fetch(url, {
                 credentials: 'same-origin',
             });
             if (!res.ok) return;
@@ -180,7 +185,7 @@ class NextTradeEngineAdapter implements IEngineAdapter {
                 await res.json();
             if (!Array.isArray(raw) || raw.length === 0) return;
 
-            // Emit only ticks that are newer than the last one we processed
+            // Server already filters by `since`; keep the client filter as a guard
             const newTicks = this.lastTickTime
                 ? raw.filter(t => t.time > this.lastTickTime!)
                 : raw.slice(-1);  // first poll: emit only the most recent tick
